@@ -1,7 +1,200 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    background-color: white;
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  kbd {
+    color: #121212;
+  }
+</style>
+<title>CS 184 Path Tracer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3-2: Additional Features to PathTracer</h1>
+    <h2 align="middle">Zhen Jiang, Victor Li (team: victor_2)</h2>
+    <h2 align="middle">Link: <a href=" ">https://cal-cs184-student.github.io/project-webpages-sp23-victor-2/proj3-2/index.html</a ></h2>
+
+    <div class="padded">
+
+        
+        * NOTE: For this project, you will choose TWO out of the four given parts to complete. One of those parts must be Part 1 or Part 2. In other words, you can choose any combination of two parts except the pair (Part 3, Part 4).
+
+        <h2 align="middle">Overview</h2>
+            <p>
+                In this project, we completed Part 1 and Part 4. In Part 1, we implemented mirror and glass models with both 
+                reflection and refraction, which allows us to render objects that made of mirror or glass realistically. In Part 
+                4, we implemented the ray-generating function for the thin-lens camera model, so we can simulate a thin lens to 
+                enable the depth of field effect. In this project, it's interesting to play with camera parameters to ultimately 
+                render a fully focused image using the thin-lens camera model. 
+            </p>
+        <br>
+
+        <h3 align="middle">Part 1. Mirror and Glass Materials</h3>
+
+        <p><b>
+            Show a sequence of six images of scene `CBspheres.dae` rendered with `max_ray_depth` set to 0, 1, 2, 3, 4, 5, and 100. The other settings should be at least 64 samples per pixel and 4 samples per light. Make sure to include all screenshots.
+        </b></p>
+        <div align="middle">
+            <table style="width:100%">
+                <tr align="center">
+                    <td>
+                    <img src="images/r_0.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 0</figcaption>
+                    </td>
+                    <td>
+                    <img src="images/r_1.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 1</figcaption>
+                    </td>
+                </tr>
+                <tr align="center">
+                    <td>
+                    <img src="images/r_2.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 2</figcaption>
+                    </td>
+                    <td>
+                    <img src="images/r_3.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 3</figcaption>
+                    </td>
+                </tr>
+                <tr align="center">
+                    <td>
+                    <img src="images/r_4.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 4</figcaption>
+                    </td>
+                    <td>
+                    <img src="images/r_5.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 5</figcaption>
+                    </td>
+                </tr>
+                <tr align="center">
+                    <td>
+                    <img src="images/r_100.png" align="middle" width="400px"/>
+                    <figcaption>max_ray_depth = 100</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br>
+        <p><b>
+            Point out the new multibounce effects that appear in each image. 
+        </b></p>
+        <p>
+            In the pictures of max_ray_depth = 0 or 1, we can't see the multibounce effects since the ray just bounced less than 1 time. In the picture of max_ray_depth = 2, we can the right ball reflected in the left ball. In the max_ray_depth = 3 or 4 or 5 or 100, we can see the multibounce effect clearly in the left ball, where the image of scene is reflected repeatedly between two balls, creating the illusion of an infinite number of reflections.
+            <br/>
+            We can also see the shadow under right ball in max_ray_depth = 1 and 2. But starting from max_ray_depth = 3, we can see a bright area in it because the light goes from upper of right ball, inside of right ball and finally leaves the right ball. We also also see a small bright area on the wall starting from max_ray_depth = 4, I guess it might be because of light path such as light → top surface of sphere → bottom surface of sphere → floor → wall → camera.
+        </p>
+        <br>
+        <p><b>
+            Explain how these bounce numbers relate to the particular effects that appear. Make sure to include all screenshots.
+        </b></p>
+        <p>
+            Overall, the scene we see in the left and right ball of picture with max_ray_depth = n is basically the scene of picture with max_ray_depth = n - 1. 
+            <br/>
+            In the pictures of max_ray_depth = 0 or 1, we can't see the multibounce effects since the ray just bounced less than 1 time. In the picture of max_ray_depth = 2, we can the right ball reflected in the left ball. Note the ball is currently black, which is exactly the scene of max_ray_depth = 1. In the picture of max_ray_depth = 3, we can the right ball reflected in the left ball. Note the ball is now colorful, which is exactly the right ball in the scene of max_ray_depth = 2. In the picture of max_ray_depth = 4 and 5, we can the right ball reflected in the left ball get brighter. The reason is that the light bounced between two balls. In the picture of max_ray_depth = 100, the picture is mostly similar to previous ones.
+        </p>
+        <br>
+
+        <h3 align="middle">Part 4. Depth of Field</h3>
+        <b>
+            For these subparts, we recommend using a microfacet BSDF scene to show off the cool out of focus effects you can get with depth of field!
+        </b>
+        <p><b>
+            In a few sentences, explain the differences between a pinhole camera model and a thin-lens camera model. 
+        </b></p>
+        <p>
+            The pinhole camera model describes a camera where light travels through a small aperture or hole, projecting an inverted image onto the opposite side of the camera's interior. On the other hand, the thin-lens camera model uses a lens to refract light and focus it onto a sensor or film, producing a non-inverted image. Furthermore, with the pin-hole camera model, everything is in focus. However, with the thin-lens camera model, objects are in focus only if they are within a plane that is at focal distance from the lens.
+        </p>
+        <br>
+        <p><b>
+            Show a "focus stack" where you focus at 4 visibly different depths through a scene. Make sure to include all screenshots.
+        </b></p>
+        <p>
+            From the pictures shown below, we fixed the lens radius but changed the focal distance. We can see that if the focal distance is too small (4.3), the dragon within the scene is not focused. As we increased the focal distance over time, parts with greater depth would be focused. 
+            <div align="middle">
+                <table style="width:100%">
+                    <tr align="center">
+                        <td>
+                        <img src="images/CBdragon_b_0.23_d_4.3.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.23, focal distance = 4.3</figcaption>
+                        </td>
+                        <td>
+                        <img src="images/CBdragon_b_0.23_d_4.5.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.23, focal distance = 4.5</figcaption>
+                        </td>
+                    </tr>
+                    <tr align="center">
+                        <td>
+                        <img src="images/CBdragon_b_0.23_d_4.7.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.23, focal distance = 4.7</figcaption>
+                        </td>
+                        <td>
+                        <img src="images/CBdragon_b_0.23_d_4.9.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.23, focal distance = 4.9</figcaption>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </p>
+        <br>
+        <p><b>
+            Show a sequence of 4 pictures with visibly different aperture sizes, all focused at the same point in a scene. Make sure to include all screenshots.
+        </b></p>
+        <p>
+            From the pictures shown below, we fixed the focal distance but changed the lens radius. We can see that the depth of field is inversely proportional to the lens radius. As we decreased the lens radius, more parts of the dragon are focused in the scene.
+            <div align="middle">
+                <table style="width:100%">
+                    <tr align="center">
+                        <td>
+                        <img src="images/CBdragon_b_0.03_d_4.7.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.03, focal distance = 4.7</figcaption>
+                        </td>
+                        <td>
+                        <img src="images/CBdragon_b_0.13_d_4.7.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.13, focal distance = 4.7</figcaption>
+                        </td>
+                    </tr>
+                    <tr align="center">
+                        <td>
+                        <img src="images/CBdragon_b_0.23_d_4.7.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.23, focal distance = 4.7</figcaption>
+                        </td>
+                        <td>
+                        <img src="images/CBdragon_b_0.63_d_4.7.png" align="middle" width="400px"/>
+                        <figcaption>lens radius = 0.63, focal distance = 4.7</figcaption>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </p>
+        <br>
+
+    </div>
+</body>
 </html>
